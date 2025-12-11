@@ -203,7 +203,7 @@ class PlaneBot(Plugin):
         issue_url: str = generate_issue_url(payload, self.config["workspace_url"])
 
         return (
-            f"Task: **[{issue_title}]({issue_url})** — **{display_field_changed}** updated by **{actor_name}**\n\n"
+            f"**Task**: **[{issue_title}]({issue_url})** — **{display_field_changed}** updated by **{actor_name}**\n\n"
             f"- **New:** `{new_value}`\n"
             f"- **Old:** `{old_value}`\n"
         )
