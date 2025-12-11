@@ -1,0 +1,11 @@
+maubot: 0.6.0
+id: dyld-w.maubot.plane
+version: 0.1.0
+license: AGPL-3.0-or-later
+modules:
+  - plane
+main_class: PlaneBot
+extra_files:
+  - base-config.yaml
+config: true
+webapp: true

@@ -1,3 +1,16 @@
+# --------- Project specific ignores ---------
+
+# Maubot plugin files
+*.mbp
+
+# Sample webhook payloads
+sample_payloads/
+
+test_curl.txt
+
+
+# --------- Standard Python project ignores ---------
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

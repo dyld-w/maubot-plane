@@ -1,0 +1,11 @@
+room_id: "!AAAAAAAAAAAAAA:example.org"
+secret: "super duper secret"
+send_notification_with_no_assignees: false
+send_notification_when_actor_is_sole_assignee: false
+workspace_url: "https://plane.example.com/workspace"
+issue_updated_notification_fields:
+    - name
+    - description
+    - target_date
+    - priority
+    - assignees
