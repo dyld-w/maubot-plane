@@ -73,7 +73,7 @@ class PlaneBot(Plugin):
         # Dispatch based on event type / activity
         event_type: str = payload.get("event")
         action_type: str = payload.get("action")
-        message: Optional[str] = "test"
+        message: Optional[str] = None
 
         if event_type == "issue":
             if action_type == "created":
