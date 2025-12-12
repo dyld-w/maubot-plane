@@ -16,7 +16,7 @@ from .utils import (
     get_assignee_name_list_from_payload,
     was_non_actor_sole_assignee_removed,
     generate_issue_url,
-    generate_comment_url
+    generate_comment_url,
 )
 
 FIELD_CHANGED_RENAMING: dict[str, str] = {
@@ -51,8 +51,8 @@ class PlaneBot(Plugin):
 
     @web.post("/webhook")
     async def webhook(self, request: Request) -> Response:
-        body_bytes = await request.read()
-        received_signature = request.headers.get("X-Plane-Signature", "")
+        body_bytes: bytes = await request.read()
+        received_signature: str = request.headers.get("X-Plane-Signature", "")
 
         secret: str = self.config["secret"]
         room_id_value: str = self.config["room_id"]
@@ -63,16 +63,16 @@ class PlaneBot(Plugin):
 
         # Load & validate JSON
         try:
-            payload = json.loads(body_bytes.decode("utf-8"))
-            pretty_json = json.dumps(payload, indent=4)
+            payload: Dict[str, Any] = json.loads(body_bytes.decode("utf-8"))
+            pretty_json: str = json.dumps(payload, indent=4)
             self.log.info(pretty_json)
         except json.JSONDecodeError:
             self.log.warning("Invalid JSON from Plane")
             return json_response({"status": "bad json"}, status=400)
 
         # Dispatch based on event type / activity
-        event_type = payload.get("event")
-        action_type = payload.get("action")
+        event_type: str = payload.get("event")
+        action_type: str = payload.get("action")
         message: Optional[str] = "test"
 
         if event_type == "issue":
@@ -94,16 +94,14 @@ class PlaneBot(Plugin):
 
         # RoomID is a str, wrap this here for the typechecker,
         # since send_markdown() and send_text() expect a RoomID
-        mautrix_room_id = RoomID(room_id_value)
-        msgtype = MessageType("m.text")
+        mautrix_room_id: RoomID = RoomID(room_id_value)
+        msgtype: MessageType = MessageType("m.text")
 
         self.log.info(
             f"Sending message ({msgtype}) to room {mautrix_room_id}: {message}"
         )
         try:
-            await self.client.send_markdown(
-                mautrix_room_id, message, msgtype=msgtype
-            )
+            await self.client.send_markdown(mautrix_room_id, message, msgtype=msgtype)
         except Exception as e:
             error_message = (
                 f"Failed to send message '{message}' to room {mautrix_room_id}: {e}"
@@ -168,7 +166,7 @@ class PlaneBot(Plugin):
             return None
 
         # 3) Field filtering
-        field_changed_raw = get_activity_value_from_payload(payload, "field") or ""
+        field_changed_raw: str = get_activity_value_from_payload(payload, "field") or ""
         field_changed: str = field_changed_raw.strip().lower()
 
         issue_updated_notification_fields: list[str] = self.config.get(
@@ -197,8 +195,8 @@ class PlaneBot(Plugin):
             raw_field_changed,
             raw_field_changed,
         )
-        old_value = get_activity_value_from_payload(payload, "old_value") or "None"
-        new_value = get_activity_value_from_payload(payload, "new_value") or "None"
+        old_value: str = get_activity_value_from_payload(payload, "old_value") or "None"
+        new_value: str = get_activity_value_from_payload(payload, "new_value") or "None"
 
         issue_url: str = generate_issue_url(payload, self.config["workspace_url"])
 
@@ -240,7 +238,7 @@ class PlaneBot(Plugin):
             f"- **Due date:** {target_date}\n"
             f"- **Assignees:** {assignee_display}\n"
         )
-    
+
     def handle_issue_comment(self, payload: Dict[str, Any]) -> str:
         comment_url: str = generate_comment_url(payload, self.config["workspace_url"])
         return f"[Comment event]({comment_url})"

@@ -21,8 +21,8 @@ def verify_plane_signature(
     if not received_sig:
         return False
 
-    mac = hmac.new(secret.encode("utf-8"), msg=body, digestmod=hashlib.sha256)
-    expected_sig = mac.hexdigest()
+    mac: hmac = hmac.new(secret.encode("utf-8"), msg=body, digestmod=hashlib.sha256)
+    expected_sig: str = mac.hexdigest()
     # Use compare_digest to avoid timing attacks.
     return hmac.compare_digest(expected_sig, received_sig)
 
@@ -124,7 +124,7 @@ def get_assignee_name_list_from_payload(payload: Dict[str, Any]) -> List[str]:
     :param payload: Parsed JSON payload from a Plane webhook.
     :return: List of assignee names as strings (possibly empty).
     """
-    assignees_raw = _get_nested_value(
+    assignees_raw: list[dict[str, Any]] = _get_nested_value(
         payload,
         ["data", "assignees"],
         expected_type=list,
@@ -156,7 +156,7 @@ def _get_assignee_id_list_from_payload(payload: Dict[str, Any]) -> List[str]:
     :param payload: Parsed JSON payload from a Plane webhook.
     :return: List of assignee IDs as strings (possibly empty).
     """
-    assignees_raw = _get_nested_value(
+    assignees_raw: list[dict[str, Any]] = _get_nested_value(
         payload,
         ["data", "assignees"],
         expected_type=list,
@@ -214,10 +214,11 @@ def was_non_actor_sole_assignee_removed(payload: dict) -> bool:
         return False
 
     # Get the previous assignee list from the activity's old value.
-    previous_assignee_ids = get_activity_value_from_payload(payload, "old_value") or []
+    previous_assignee_ids: list[Any] | None = (
+        get_activity_value_from_payload(payload, "old_value") or []
+    )
 
     if isinstance(previous_assignee_ids, str):
-        # Adjust this parsing if your payload uses a different encoding.
         previous_assignee_ids = [
             assignee_id.strip()
             for assignee_id in previous_assignee_ids.split(",")
@@ -236,13 +237,48 @@ def was_non_actor_sole_assignee_removed(payload: dict) -> bool:
 
     return bool(actor_id and previous_assignee_id and previous_assignee_id != actor_id)
 
-def generate_issue_url(payload, workspace_base_url):
-    project_id = get_data_value_from_payload(payload, "project")
-    issue_id = get_data_value_from_payload(payload, "id")
+
+def generate_issue_url(payload: Dict[str, Any], workspace_base_url: str) -> str:
+    """
+    Construct the Plane issue URL for a given webhook payload.
+
+    This function extracts the project identifier and issue identifier from the
+    Plane webhook payload and combines them with the provided workspace base URL
+    to produce a direct link to the issue in the Plane UI.
+
+    Args:
+        payload: The decoded Plane webhook payload containing issue data, including
+            the project and issue identifiers.
+        workspace_base_url: The base URL of the Plane workspace, for example
+            "https://app.plane.so/workspaces/my-workspace".
+
+    Returns:
+        A fully-qualified URL pointing to the issue in Plane.
+    """
+    project_id: str = get_data_value_from_payload(payload, "project")
+    issue_id: str = get_data_value_from_payload(payload, "id")
     return f"{workspace_base_url}/projects/{project_id}/issues/{issue_id}"
 
-def generate_comment_url(payload, workspace_base_url):
-    project_id = get_data_value_from_payload(payload, "project")
-    issue_id = get_data_value_from_payload(payload, "issue")
-    comment_id = get_data_value_from_payload(payload, "id")
+
+def generate_comment_url(payload: Dict[str, Any], workspace_base_url: str) -> str:
+    """
+    Construct the Plane issue comment URL for a given webhook payload.
+
+    This function extracts the project identifier, issue identifier, and comment
+    identifier from the Plane webhook payload and combines them with the provided
+    workspace base URL to produce a direct link to the specific comment on the
+    issue in the Plane UI.
+
+    Args:
+        payload: The decoded Plane webhook payload containing comment data, including
+            the project, issue, and comment identifiers.
+        workspace_base_url: The base URL of the Plane workspace, for example
+            "https://app.plane.so/workspaces/my-workspace".
+
+    Returns:
+        A fully-qualified URL pointing to the specific comment on the issue in Plane.
+    """
+    project_id: str = get_data_value_from_payload(payload, "project")
+    issue_id: str = get_data_value_from_payload(payload, "issue")
+    comment_id: str = get_data_value_from_payload(payload, "id")
     return f"{workspace_base_url}/projects/{project_id}/issues/{issue_id}/#comment-{comment_id}"
