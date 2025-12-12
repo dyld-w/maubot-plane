@@ -1,5 +1,12 @@
 # maubot-plane
 
+## On Pause
+I contacted Plane about the below quirks and confirmed that a complete reworking of the webhooks is on the way. 
+
+Link to the Discord thread: https://discord.com/channels/1031547764020084846/1448814959524974662
+
+As such, I'm deploying the super messy MVP in anticipation of having to rework it soon, and I will revisit this project when the Plane team releases the revised webhook implementation.
+
 ## Plane Webhook Quirks (Only covering Issues and some Issue Comments):
 - When updating assignees for a task, the `assignees` field `old_value` and `new_value` values display only the name for the individual assignee added or removed, whereas the `assignee_ids` field includes values for the all of the assignees.
   - It would be really helpful if the `assignees` values showed all assignees, old and new, like `assignee_ids` does so I don't have to maintain an id to name mapping on my side.
@@ -16,7 +23,9 @@
 - Assigning a module triggers the `issue` **`created`** action instead of `issue` `updated`. Similarly, removing a module triggers the `issue` **`deleted`** action instead of `issue` `updated`.
   - Cycle assignment and removal shows the same behavior.
 
-## TODO: Add pipeline to build mbp file
-## TODO: Add usage instructions
-## TODO: Explain what it does
-## TODO: refactor so it is less messy
+## TODO: 
+- [ ] Add pipeline to build mbp file
+- [ ] Add usage instructions
+- [ ] Explain what it does
+- [ ] refactor so it is less messy
+- [ ] explain expansion via integration with the [Plane SDK](https://github.com/makeplane/plane-python-sdk)
