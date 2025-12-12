@@ -206,17 +206,52 @@ class PlaneBot(Plugin):
             f"- **Old:** `{old_value}`\n"
         )
 
-    def handle_issue_created(self, payload: Dict[str, Any]) -> str:
+    def handle_issue_created(self, payload: Dict[str, Any]) -> str | None:
         """
         Build a Markdown-formatted summary for a newly created Plane issue.
 
-        The message includes:
-        - Issue title
-        - Actor (creator)
-        - Priority
-        - Due date
-        - Assignee list
+        This handler only sends notifications for "real" creation events and skips
+        noisy cases:
+
+        - Webhook payloads that represent an activity field change rather than a
+        true creation (i.e., when `activity.field` is present).
+        - Self-only assignments where the actor is the sole assignee.
+        - Tasks with no assignees.
+
+        When a notification should not be sent, this function returns None so the
+        caller can skip sending a Matrix message.
         """
+        # If `activity.field` exists, Plane is notifying about a field-change, not a creation.
+        activity_node = payload.get("activity") or {}
+        changed_field = activity_node.get("field")
+        if changed_field:
+            self.log.info(
+                f"Skipping issue.created notification: not a true creation "
+                f"(activity.field={changed_field!r})."
+            )
+            return None
+
+        # Avoid self-notifications when the actor is the only assignee.
+        send_when_actor_is_sole_assignee: bool = bool(
+            self.config.get("send_notification_when_actor_is_sole_assignee", False)
+        )
+        if not send_when_actor_is_sole_assignee and is_actor_sole_assignee(payload):
+            self.log.info(
+                "Skipping issue.created notification: actor is sole assignee."
+            )
+            return None
+
+        # Only notify when there are assignees we can show.
+        send_when_no_assignees: bool = bool(
+            self.config.get("send_notification_with_no_assignees", False)
+        )
+        assignee_names: List[str | None] = get_assignee_name_list_from_payload(payload)
+        if not send_when_no_assignees and not assignee_names:
+            self.log.info(
+                "Skipping issue.created notification: no assignees on new task."
+            )
+            return None
+
         issue_title: str = get_data_value_from_payload(payload, "name") or "Untitled"
         actor_name: str = (
             get_actor_value_from_payload(payload, "display_name") or "Unknown user"
@@ -224,10 +259,7 @@ class PlaneBot(Plugin):
         priority: str = get_data_value_from_payload(payload, "priority") or "None"
         target_date: str = get_data_value_from_payload(payload, "target_date") or "None"
 
-        assignee_names: List[str] = get_assignee_name_list_from_payload(payload)
-        assignee_display: str = (
-            ", ".join(assignee_names) if assignee_names else "Unassigned"
-        )
+        assignee_display: str = ", ".join(assignee_names)
 
         issue_url: str = generate_issue_url(payload, self.config["workspace_url"])
 
